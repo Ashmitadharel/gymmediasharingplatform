@@ -1,0 +1,21 @@
+using Azure.Storage.Blobs;
+
+[ApiController]
+[Route("api/[controller]")]
+public class FileController : ControllerBase {
+    private readonly string _blobConnectionString = "YourBlobStorageConnectionString";
+    private readonly string _containerName = "multimedia";
+
+    [HttpPost("upload")]
+    public async Task<IActionResult> Upload(IFormFile file) {
+        var blobServiceClient = new BlobServiceClient(_blobConnectionString);
+        var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+        var blobClient = containerClient.GetBlobClient(file.FileName);
+
+        using (var stream = file.OpenReadStream()) {
+            await blobClient.UploadAsync(stream, overwrite: true);
+        }
+
+        return Ok("File uploaded successfully");
+    }
+}

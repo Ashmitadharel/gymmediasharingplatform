@@ -1,0 +1,35 @@
+using Microsoft.Azure.Cosmos;
+
+[ApiController]
+[Route("api/[controller]")]
+public class MetadataController : ControllerBase {
+    private readonly CosmosClient _cosmosClient;
+    private readonly Container _container;
+
+    public MetadataController() {
+        string endpoint = "YourCosmosDbEndpoint";
+        string primaryKey = "YourCosmosDbPrimaryKey";
+        _cosmosClient = new CosmosClient(endpoint, primaryKey);
+        _container = _cosmosClient.GetDatabase("mediadatabase").GetContainer("Gymdata");
+    }
+
+    [HttpPost("add")]
+    public async Task<IActionResult> AddMetadata([FromBody] dynamic data) {
+        await _container.CreateItemAsync(data);
+        return Ok("Metadata added successfully");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllMetadata() {
+        var query = "SELECT * FROM c";
+        var iterator = _container.GetItemQueryIterator<dynamic>(query);
+        var results = new List<dynamic>();
+
+        while (iterator.HasMoreResults) {
+            var response = await iterator.ReadNextAsync();
+            results.AddRange(response);
+        }
+
+        return Ok(results);
+    }
+}
